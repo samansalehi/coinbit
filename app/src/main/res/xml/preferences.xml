@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <android.support.v7.preference.SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="notification"
+        android:summary="@string/Notification_sum"
+        android:title="@string/Notification" />
+    <PreferenceCategory android:title="My Wealth">
+
+        <EditTextPreference
+            android:defaultValue="0"
+            android:key="myBitcoin"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:summary="@string/MyBitcoins_sum"
+            android:title="@string/MyBitcoins" />
+    </PreferenceCategory>
+    <EditTextPreference
+        android:defaultValue="0"
+        android:key="myRials"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:summary="@string/MyRials_sum"
+        android:title="@string/MyRials" />
+    <EditTextPreference
+        android:defaultValue="2"
+        android:key="profitOnSell"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:summary="@string/PercentTosell_sum"
+        android:title="@string/PercentTosell" />
+</PreferenceScreen>

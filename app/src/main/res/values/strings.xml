@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">CoinBit</string>
+    <string name="action_settings">Settings</string>
+    <string name="Notification">Notification</string>
+    <string name="Notification_sum">Notify me when change acquired</string>
+    <string name="MyBitcoins">MyBitcoins</string>
+    <string name="MyBitcoins_sum">All of my Bitcoins</string>
+    <string name="MyRials">MyRials</string>
+    <string name="MyRials_sum">All of my Rials</string>
+    <string name="PercentTosell">Profit to sell</string>
+    <string name="PercentTosell_sum">Sell Bitcoins when the profit is over n%</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+</resources>
