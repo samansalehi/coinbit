@@ -10,7 +10,7 @@
 
         <EditTextPreference
             android:defaultValue="0"
-            android:key="myBitcoin"
+            android:key="myBitcoins"
             android:selectAllOnFocus="true"
             android:singleLine="true"
             android:summary="@string/MyBitcoins_sum"
@@ -25,7 +25,7 @@
         android:title="@string/MyRials" />
     <EditTextPreference
         android:defaultValue="2"
-        android:key="profitOnSell"
+        android:key="percentToSell"
         android:selectAllOnFocus="true"
         android:singleLine="true"
         android:summary="@string/PercentTosell_sum"
