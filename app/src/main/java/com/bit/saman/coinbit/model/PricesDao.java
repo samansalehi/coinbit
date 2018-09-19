@@ -12,7 +12,7 @@ public interface PricesDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     public void insertPrice(PriceEntity entityList);
 
-    @Query("select * from PriceEntity limit 1")
+    @Query("select * from PriceEntity order by id desc  limit 1")
     public PriceEntity getLastPrice();
 
 }

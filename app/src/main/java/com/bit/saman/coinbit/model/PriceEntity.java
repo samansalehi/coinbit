@@ -10,8 +10,8 @@ import java.util.Date;
 public class PriceEntity {
     @PrimaryKey(autoGenerate = true)
     private int id;
-    private long bitcoin;
-    private long dollar;
+    private double bitcoin;
+    private double dollar;
 
     @ColumnInfo(name = "DateTime")
     @TypeConverters(TimestampConverter.class)
@@ -25,19 +25,19 @@ public class PriceEntity {
         this.id = id;
     }
 
-    public long getBitcoin() {
+    public double getBitcoin() {
         return bitcoin;
     }
 
-    public void setBitcoin(long bitcoin) {
+    public void setBitcoin(double bitcoin) {
         this.bitcoin = bitcoin;
     }
 
-    public long getDollar() {
+    public double getDollar() {
         return dollar;
     }
 
-    public void setDollar(long dollar) {
+    public void setDollar(double dollar) {
         this.dollar = dollar;
     }
 
