@@ -7,8 +7,12 @@ import android.app.job.JobService;
 import android.arch.persistence.room.Room;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v4.app.NotificationCompat;
+import android.support.v7.preference.PreferenceManager;
 import android.widget.Toast;
 
 import com.bit.saman.coinbit.model.CoinDatabase;
@@ -37,12 +41,13 @@ public class CheckPricesService extends JobService {
                 doc = Jsoup.connect(urls[0].toString()).ignoreContentType(true).execute().body();
                 JSONObject bitcoinObj = new JSONObject(doc);
 
-                doc = Jsoup.connect(urls[1].toString()).ignoreContentType(true).execute().body();
-                JSONObject dollarObj = new JSONObject(doc);
+                Elements element = Jsoup.connect(urls[1].toString()).get()
+                        .getElementsByClass("profile-container container")
+                        .select("span[itemprop$=price]");
 
                 PriceEntity priceEntity = new PriceEntity();
                 priceEntity.setBitcoin(Double.parseDouble(new JSONObject(new JSONObject(bitcoinObj.getString("bpi")).getString("USD")).getString("rate_float")));
-                priceEntity.setDollar(Double.parseDouble(new JSONObject(dollarObj.getString("sana_buy_usd")).getString("price").replace(",", "")));
+                priceEntity.setDollar(Double.parseDouble(element.get(0).childNodes().get(0).toString().replace(",", "")));
                 priceEntity.setDate(new Date());
                 insertLastPriceToDb(priceEntity);
 
@@ -72,7 +77,7 @@ public class CheckPricesService extends JobService {
         try {
             URL[] urls = new URL[2];
             urls[0] = new URL("https://api.coindesk.com/v1/bpi/currentprice.json");
-            urls[1] = new URL("http://www.tgju.org/?act=sanarateservice&client=tgju&noview&type=json");
+            urls[1] = new URL("http://www.tgju.org/chart/price_dollar_rl");
             new FetchPrices().execute(urls);
         } catch (MalformedURLException e) {
             e.printStackTrace();
@@ -96,11 +101,12 @@ public class CheckPricesService extends JobService {
             db = Room.databaseBuilder(getApplicationContext(), CoinDatabase.class, "CoinDB").build();
             oldPrice = db.pricesDao().getLastPrice();
             if (isChange(oldPrice, priceEntities[0])) {
+                Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
                 NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext(), "12")
-                        .setSmallIcon(R.drawable.ic_launcher_background)
+                        .setSmallIcon(R.mipmap.bitcoin)
                         .setContentTitle("New Prices Change")
                         .setContentText("Bitcoin " + priceEntities[0].getBitcoin() + " $" + ", Dollar" + priceEntities[0].getDollar())
-                        .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+                        .setPriority(NotificationCompat.PRIORITY_DEFAULT).setSound(alarmSound);
 
                 Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                 PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0, intent, Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -122,15 +128,20 @@ public class CheckPricesService extends JobService {
             double oldBitPrice = oldPrice.getBitcoin();
             double oldDollarPrice = oldPrice.getDollar();
 
-            if ((newBitPrice >= oldBitPrice * 0.02 + oldBitPrice)
-                    || (newBitPrice <= oldBitPrice - oldBitPrice * 0.02)
-                    || (newDollarPrice >= oldDollarPrice * 0.02 + oldDollarPrice)
-                    || (newDollarPrice <= oldDollarPrice - oldDollarPrice * 0.02)) {
+            double changePercent = getPropertyValue("changePercent");
+            if ((newBitPrice >= oldBitPrice * changePercent + oldBitPrice)
+                    || (newBitPrice <= oldBitPrice - oldBitPrice * changePercent)
+                    || (newDollarPrice >= oldDollarPrice * changePercent + oldDollarPrice)
+                    || (newDollarPrice <= oldDollarPrice - oldDollarPrice * changePercent)) {
                 return true;
             } else {
                 return false;
             }
         }
 
+        private double getPropertyValue(String key) {
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            return Double.valueOf(preferences.getString(key, "2"))/100;
+        }
     }
 }
