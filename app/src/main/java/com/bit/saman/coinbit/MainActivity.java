@@ -2,10 +2,12 @@ package com.bit.saman.coinbit;
 
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
+import android.arch.persistence.room.Room;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -15,7 +17,13 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Button;
 import android.widget.Toast;
+
+import com.bit.saman.coinbit.model.CoinDatabase;
+import com.bit.saman.coinbit.model.PriceEntity;
+
+import java.text.DecimalFormat;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -36,6 +44,30 @@ public class MainActivity extends AppCompatActivity {
         });
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
         scheduleJob();
+        updateContent();
+    }
+
+    private void updateContent() {
+        final Button bitcoin=findViewById(R.id.bitcoin);
+        final Button dollar=findViewById(R.id.dollar);
+        final Button rial=findViewById(R.id.rial);
+
+        new AsyncTask<Void, Void, PriceEntity>() {
+            @Override
+            protected PriceEntity doInBackground(Void... voids) {
+                CoinDatabase db = Room.databaseBuilder(getApplicationContext(), CoinDatabase.class, "CoinDB").build();
+                return db.pricesDao().getLastPrice();
+            }
+
+            @Override
+            protected void onPostExecute(PriceEntity priceEntity) {
+                super.onPostExecute(priceEntity);
+                DecimalFormat formatter = new DecimalFormat("#,###.00");
+                bitcoin.setText(formatter.format(priceEntity.getBitcoin()));
+                dollar.setText(formatter.format(priceEntity.getDollar()));
+                rial.setText(formatter.format(Math.round(priceEntity.getDollar()*priceEntity.getBitcoin())));
+            }
+        }.execute();
     }
 
     private void scheduleJob() {
