@@ -12,6 +12,15 @@ public class PriceEntity {
     private int id;
     private double bitcoin;
     private double dollar;
+    private double ether;
+
+    public double getEther() {
+        return ether;
+    }
+
+    public void setEther(double ether) {
+        this.ether = ether;
+    }
 
     @ColumnInfo(name = "DateTime")
     @TypeConverters(TimestampConverter.class)

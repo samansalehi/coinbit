@@ -4,6 +4,8 @@
     <string name="Notification">Notification</string>
     <string name="Notification_sum">Notify me when change acquired</string>
     <string name="MyBitcoins">MyBitcoins</string>
+    <string name="MyEther">MyEther</string>
+    <string name="MyEther_sum">My Ethereium</string>
     <string name="MyBitcoins_sum">All of my Bitcoins</string>
     <string name="MyRials">MyRials</string>
     <string name="MyRials_sum">All of my Rials</string>

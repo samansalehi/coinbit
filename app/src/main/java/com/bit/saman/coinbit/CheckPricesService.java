@@ -27,6 +27,7 @@ import org.jsoup.select.Elements;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.DecimalFormat;
 import java.util.Date;
 
 public class CheckPricesService extends JobService {
@@ -38,16 +39,20 @@ public class CheckPricesService extends JobService {
         protected PriceEntity doInBackground(URL... urls) {
             String doc = null;
             try {
-                doc = Jsoup.connect(urls[0].toString()).ignoreContentType(true).execute().body();
-                JSONObject bitcoinObj = new JSONObject(doc);
+                doc = Jsoup.connect(urls[0].toString() + "bitcoin/").ignoreContentType(true).execute().body();
+                JSONObject bitcoinObj = new JSONObject(doc.replace("[", "").replace("]", ""));
+
+                doc = Jsoup.connect(urls[0].toString() + "ethereum/").ignoreContentType(true).execute().body();
+                JSONObject etherObj = new JSONObject(doc.replace("[", "").replace("]", ""));
 
                 Elements element = Jsoup.connect(urls[1].toString()).get()
                         .getElementsByClass("profile-container container")
                         .select("span[itemprop$=price]");
 
                 PriceEntity priceEntity = new PriceEntity();
-                priceEntity.setBitcoin(Double.parseDouble(new JSONObject(new JSONObject(bitcoinObj.getString("bpi")).getString("USD")).getString("rate_float")));
-                priceEntity.setDollar(Double.parseDouble(element.get(0).childNodes().get(0).toString().replace(",", "")));
+                priceEntity.setBitcoin(Double.parseDouble(bitcoinObj.getString("price_usd")));
+                priceEntity.setEther(Double.parseDouble(etherObj.getString("price_usd")));
+//                priceEntity.setDollar(Double.parseDouble(element.get(0).childNodes().get(0).toString().replace(",", "")));
                 priceEntity.setDate(new Date());
                 insertLastPriceToDb(priceEntity);
 
@@ -76,7 +81,7 @@ public class CheckPricesService extends JobService {
     public boolean onStartJob(JobParameters params) {
         try {
             URL[] urls = new URL[2];
-            urls[0] = new URL("https://api.coindesk.com/v1/bpi/currentprice.json");
+            urls[0] = new URL("https://api.coinmarketcap.com/v1/ticker/");
             urls[1] = new URL("http://www.tgju.org/chart/price_dollar_rl");
             new FetchPrices().execute(urls);
         } catch (MalformedURLException e) {
@@ -100,20 +105,14 @@ public class CheckPricesService extends JobService {
         protected Boolean doInBackground(PriceEntity... priceEntities) {
             db = Room.databaseBuilder(getApplicationContext(), CoinDatabase.class, "CoinDB").build();
             oldPrice = db.pricesDao().getLastPrice();
-            if (isChange(oldPrice, priceEntities[0])) {
-                Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext(), "12")
-                        .setSmallIcon(R.mipmap.bitcoin)
-                        .setContentTitle("New Prices Change")
-                        .setContentText("Bitcoin " + priceEntities[0].getBitcoin() + " $" + ", Dollar" + priceEntities[0].getDollar())
-                        .setPriority(NotificationCompat.PRIORITY_DEFAULT).setSound(alarmSound);
-
-                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0, intent, Intent.FLAG_ACTIVITY_NEW_TASK);
-                mBuilder.setContentIntent(pi);
-                NotificationManager mNotificationManager =
-                        (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                mNotificationManager.notify(0, mBuilder.build());
+            if (oldPrice != null) {
+                double myEther = getPropertyValue("myEther");
+                double myBitcoin = getPropertyValue("myBitcoin");
+                if (isEtherToBitcoin(priceEntities[0])) {
+                    showNotification(priceEntities[0], "Change Ethereum to Bitcoin", (myEther*priceEntities[0].getEther()/priceEntities[0].getBitcoin()-myBitcoin)*priceEntities[0].getBitcoin());
+                } else if (isBitcoinToEther(priceEntities[0])) {
+                    showNotification(priceEntities[0], "Change Bitcoin to Ethereum", (myBitcoin*priceEntities[0].getBitcoin()/priceEntities[0].getEther()-myEther)*priceEntities[0].getEther());
+                }
             }
 
             if (oldPrice == null || oldPrice.getBitcoin() != priceEntities[0].getBitcoin() || oldPrice.getDollar() != priceEntities[0].getDollar()) {
@@ -122,17 +121,59 @@ public class CheckPricesService extends JobService {
             return true;
         }
 
+        private boolean isBitcoinToEther(PriceEntity priceEntity) {
+            double changePercent = getPropertyValue("changePercent")/100;
+            double myEther = getPropertyValue("myEther");
+            double myBitcoin = getPropertyValue("myBitcoin");
+
+            if (priceEntity.getBitcoin() * myBitcoin / priceEntity.getEther() > myEther + myEther * changePercent)
+                return true;
+            return false;
+        }
+
+        private void showNotification(PriceEntity priceEntity, String title,double profit) {
+            DecimalFormat formatter = new DecimalFormat("#,###.0000");
+            Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext(), "12")
+                    .setSmallIcon(R.mipmap.bitcoin)
+                    .setContentTitle(title)
+                    .setContentText("Bitcoin " + formatter.format(priceEntity.getBitcoin()) + " $" + ", Ether " + formatter.format(priceEntity.getEther())+", profit "+ formatter.format(profit) )
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT).setSound(alarmSound);
+
+            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+            PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0, intent, Intent.FLAG_ACTIVITY_NEW_TASK);
+            mBuilder.setContentIntent(pi);
+            NotificationManager mNotificationManager =
+                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            mNotificationManager.notify(0, mBuilder.build());
+        }
+
+        private boolean isEtherToBitcoin(PriceEntity priceEntity) {
+            double changePercent = getPropertyValue("changePercent")/100;
+            double myEther = getPropertyValue("myEther");
+            double myBitcoin = getPropertyValue("myBitcoin");
+
+            if (priceEntity.getEther() * myEther / priceEntity.getBitcoin() > myBitcoin + myBitcoin * changePercent)
+                return true;
+            return false;
+        }
+
         private boolean isChange(PriceEntity oldPrice, PriceEntity result) {
             double newBitPrice = result.getBitcoin();
             double newDollarPrice = result.getDollar();
             double oldBitPrice = oldPrice.getBitcoin();
             double oldDollarPrice = oldPrice.getDollar();
+            double oldEtherPrice = oldPrice.getEther();
+            double newEtherPrice = result.getEther();
 
-            double changePercent = getPropertyValue("changePercent");
+            double changePercent = getPropertyValue("changePercent") / 100;
             if ((newBitPrice >= oldBitPrice * changePercent + oldBitPrice)
                     || (newBitPrice <= oldBitPrice - oldBitPrice * changePercent)
                     || (newDollarPrice >= oldDollarPrice * changePercent + oldDollarPrice)
-                    || (newDollarPrice <= oldDollarPrice - oldDollarPrice * changePercent)) {
+                    || (newDollarPrice <= oldDollarPrice - oldDollarPrice * changePercent)
+                    || (newEtherPrice >= oldEtherPrice * changePercent + oldEtherPrice)
+                    || (newEtherPrice <= oldEtherPrice - oldEtherPrice * changePercent)
+                    ) {
                 return true;
             } else {
                 return false;
@@ -141,7 +182,7 @@ public class CheckPricesService extends JobService {
 
         private double getPropertyValue(String key) {
             SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-            return Double.valueOf(preferences.getString(key, "2"))/100;
+            return Double.valueOf(preferences.getString(key, "2"));
         }
     }
 }

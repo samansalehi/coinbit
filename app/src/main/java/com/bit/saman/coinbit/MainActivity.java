@@ -61,11 +61,13 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             protected void onPostExecute(PriceEntity priceEntity) {
-                super.onPostExecute(priceEntity);
-                DecimalFormat formatter = new DecimalFormat("#,###.00");
-                bitcoin.setText(formatter.format(priceEntity.getBitcoin()));
-                dollar.setText(formatter.format(priceEntity.getDollar()));
-                rial.setText(formatter.format(Math.round(priceEntity.getDollar()*priceEntity.getBitcoin())));
+                if (priceEntity!=null) {
+                    super.onPostExecute(priceEntity);
+                    DecimalFormat formatter = new DecimalFormat("#,###.00");
+                    bitcoin.setText(formatter.format(priceEntity.getBitcoin()));
+                    dollar.setText(formatter.format(priceEntity.getDollar()));
+                    rial.setText(formatter.format(Math.round(priceEntity.getDollar() * priceEntity.getBitcoin())));
+                }
             }
         }.execute();
     }

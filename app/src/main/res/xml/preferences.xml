@@ -11,11 +11,19 @@
         <EditTextPreference
             android:defaultValue="0"
             android:inputType="number"
-            android:key="myBitcoins"
+            android:key="myBitcoin"
             android:selectAllOnFocus="true"
             android:singleLine="true"
             android:summary="@string/MyBitcoins_sum"
             android:title="@string/MyBitcoins" />
+        <EditTextPreference
+            android:defaultValue="0"
+            android:inputType="number"
+            android:key="myEther"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:summary="@string/MyEther_sum"
+            android:title="@string/MyEther" />
     </PreferenceCategory>
     <EditTextPreference
         android:defaultValue="0"
