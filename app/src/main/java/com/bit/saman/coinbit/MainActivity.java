@@ -18,6 +18,7 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bit.saman.coinbit.model.CoinDatabase;
@@ -48,10 +49,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateContent() {
-        final Button bitcoin=findViewById(R.id.bitcoin);
-        final Button dollar=findViewById(R.id.dollar);
-        final Button rial=findViewById(R.id.rial);
-
+        final Button bitcoin = findViewById(R.id.bitcoin);
+        final Button ether = findViewById(R.id.ether);
+        final Button dollar = findViewById(R.id.dollar);
+        final TextView ether2bit = findViewById(R.id.ether2bit);
+        final TextView wealthInEther = findViewById(R.id.wealthInEther);
+        final TextView wealthInBit = findViewById(R.id.wealthInBit);
+        final double myEther = getPropertyValue("myEther");
+        final double myBitcoin = getPropertyValue("myBitcoin");
         new AsyncTask<Void, Void, PriceEntity>() {
             @Override
             protected PriceEntity doInBackground(Void... voids) {
@@ -61,22 +66,27 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             protected void onPostExecute(PriceEntity priceEntity) {
-                if (priceEntity!=null) {
+                double profits[] = CoinUtils.calculateProfit(priceEntity.getBitcoin(),priceEntity.getEther(),myBitcoin,myEther);
+                if (priceEntity != null) {
                     super.onPostExecute(priceEntity);
                     DecimalFormat formatter = new DecimalFormat("#,###.00");
                     bitcoin.setText(formatter.format(priceEntity.getBitcoin()));
+                    ether.setText(formatter.format(priceEntity.getEther()));
                     dollar.setText(formatter.format(priceEntity.getDollar()));
-                    rial.setText(formatter.format(Math.round(priceEntity.getDollar() * priceEntity.getBitcoin())));
+                    ether2bit.setText(ether2bit.getText()  + formatter.format(profits[0]));
+                    wealthInBit.setText(wealthInBit.getText()+ formatter.format(priceEntity.getBitcoin()*myBitcoin));
+                    wealthInEther.setText(wealthInEther.getText()+ formatter.format(priceEntity.getEther()*myEther));
+                    //rial.setText(formatter.format(Math.round(priceEntity.getDollar() * priceEntity.getBitcoin())));
                 }
             }
         }.execute();
     }
 
     private void scheduleJob() {
-        JobScheduler jobScheduler= (JobScheduler) getApplicationContext().getSystemService(Context.JOB_SCHEDULER_SERVICE);
-        ComponentName componentName =new ComponentName(this,CheckPricesService.class);
+        JobScheduler jobScheduler = (JobScheduler) getApplicationContext().getSystemService(Context.JOB_SCHEDULER_SERVICE);
+        ComponentName componentName = new ComponentName(this, CheckPricesService.class);
         JobInfo jobInfoObj = new JobInfo.Builder(1, componentName)
-                .setPeriodic(15000*60).setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY).build();
+                .setPeriodic(15000 * 60).setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY).build();
         jobScheduler.schedule(jobInfoObj);
     }
 
@@ -108,5 +118,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private double getPropertyValue(String key) {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        return Double.valueOf(preferences.getString(key, "2"));
     }
 }

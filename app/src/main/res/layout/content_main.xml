@@ -12,9 +12,10 @@
         android:id="@+id/bitcoin"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="8dp"
         android:layout_marginTop="16dp"
         android:text="Button"
+        android:drawableLeft="@mipmap/btc_round"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -22,19 +23,51 @@
         android:id="@+id/dollar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="8dp"
         android:layout_marginTop="16dp"
         android:text="Button"
+        android:drawableLeft="@mipmap/dollar_round"
+        app:layout_constraintStart_toEndOf="@+id/ether"
+        app:layout_constraintTop_toTopOf="parent" />
+    <Button
+        android:id="@+id/ether"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:text="Button"
+        android:drawableLeft="@mipmap/eth_round"
         app:layout_constraintStart_toEndOf="@+id/bitcoin"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/rial"
+    <TextView
+        android:id="@+id/ether2bit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:text="Button"
-        app:layout_constraintStart_toEndOf="@+id/dollar"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="Ethereum to Bitcoin:"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/bitcoin" />
+
+    <TextView
+        android:id="@+id/wealthInBit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="Wealth in Bitcoin:"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ether2bit" />
+
+    <TextView
+        android:id="@+id/wealthInEther"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="Wealth in Ethereum:"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/wealthInBit" />
+
 </android.support.constraint.ConstraintLayout>
