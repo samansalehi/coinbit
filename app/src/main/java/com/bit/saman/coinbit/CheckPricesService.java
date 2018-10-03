@@ -44,14 +44,27 @@ public class CheckPricesService extends JobService {
 
                 doc = Jsoup.connect(urls[0].toString() + "ethereum/").ignoreContentType(true).execute().body();
                 JSONObject etherObj = new JSONObject(doc.replace("[", "").replace("]", ""));
-
-                Elements element = Jsoup.connect(urls[1].toString()).get()
-                        .getElementsByClass("data-table market-table market-section-right")
-                        .select("td.nf");
+                Elements element = null;
+                double dollar = 0;
+                try {
+                    element = Jsoup.connect(urls[1].toString()).get()
+                            .getElementsByClass("data-table market-table market-section-right")
+                            .select("td.nf");
+                    dollar = Double.parseDouble(element.get(0).childNodes().get(0).toString().replace(",", ""));
+                } catch (NumberFormatException e) {
+                    try {
+                        element = Jsoup.connect(urls[2].toString()).get().getElementsByClass("success");
+                        dollar = Double.parseDouble(element.get(0).select("td").get(1).select("td").get(0).childNode(0).toString().substring(0, 6).replace(",", ""));
+                    } catch (Exception e1) {
+                        dollar = 15000;
+                    }
+                } catch (Exception e) {
+                    dollar = 15000;
+                }
                 PriceEntity priceEntity = new PriceEntity();
                 priceEntity.setBitcoin(Double.parseDouble(bitcoinObj.getString("price_usd")));
                 priceEntity.setEther(Double.parseDouble(etherObj.getString("price_usd")));
-                priceEntity.setDollar(Double.parseDouble(element.get(0).childNodes().get(0).toString().replace(",", "")));
+                priceEntity.setDollar(dollar);
                 priceEntity.setDate(new Date());
                 insertLastPriceToDb(priceEntity);
 
@@ -79,9 +92,10 @@ public class CheckPricesService extends JobService {
     @Override
     public boolean onStartJob(JobParameters params) {
         try {
-            URL[] urls = new URL[2];
+            URL[] urls = new URL[3];
             urls[0] = new URL("https://api.coinmarketcap.com/v1/ticker/");
             urls[1] = new URL("http://www.tgju.org/currency");
+            urls[2] = new URL("https://bazar360.com/");
             new FetchPrices().execute(urls);
         } catch (MalformedURLException e) {
             e.printStackTrace();
@@ -107,7 +121,7 @@ public class CheckPricesService extends JobService {
             double myEther = getPropertyValue("myEther");
             double myBitcoin = getPropertyValue("myBitcoin");
             if (oldPrice != null) {
-                double coinsProfit[] = CoinUtils.calculateProfit(priceEntities[0].getBitcoin(), priceEntities[0].getEther(),myBitcoin,myEther);
+                double coinsProfit[] = CoinUtils.calculateProfit(priceEntities[0].getBitcoin(), priceEntities[0].getEther(), myBitcoin, myEther);
                 if (isEtherToBitcoin(priceEntities[0])) {
                     showNotification(priceEntities[0], "Change Ethereum to Bitcoin", coinsProfit[0]);
                 } else if (isBitcoinToEther(priceEntities[0])) {
@@ -135,7 +149,7 @@ public class CheckPricesService extends JobService {
             DecimalFormat formatter = new DecimalFormat("#,###.0000");
             Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext(), "12")
-                    .setSmallIcon(R.mipmap.bitcoin)
+                    .setSmallIcon(R.mipmap.btc_round)
                     .setContentTitle(title)
                     .setContentText("Bitcoin " + formatter.format(priceEntity.getBitcoin()) + " $" + ", Ether " + formatter.format(priceEntity.getEther()) + ", profit " + formatter.format(profit))
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT).setSound(alarmSound);

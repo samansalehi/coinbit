@@ -52,9 +52,9 @@ public class MainActivity extends AppCompatActivity {
         final Button bitcoin = findViewById(R.id.bitcoin);
         final Button ether = findViewById(R.id.ether);
         final Button dollar = findViewById(R.id.dollar);
-        final TextView ether2bit = findViewById(R.id.ether2bit);
-        final TextView wealthInEther = findViewById(R.id.wealthInEther);
-        final TextView wealthInBit = findViewById(R.id.wealthInBit);
+        final Button wealthInBTC = findViewById(R.id.wealthInBTC);
+        final Button wealthInETH = findViewById(R.id.wealthInETH);
+
         final double myEther = getPropertyValue("myEther");
         final double myBitcoin = getPropertyValue("myBitcoin");
         new AsyncTask<Void, Void, PriceEntity>() {
@@ -66,16 +66,25 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             protected void onPostExecute(PriceEntity priceEntity) {
-                double profits[] = CoinUtils.calculateProfit(priceEntity.getBitcoin(),priceEntity.getEther(),myBitcoin,myEther);
                 if (priceEntity != null) {
+                    double profits[] = CoinUtils.calculateProfit(priceEntity.getBitcoin(), priceEntity.getEther(), myBitcoin, myEther);
                     super.onPostExecute(priceEntity);
-                    DecimalFormat formatter = new DecimalFormat("#,###.00");
-                    bitcoin.setText(formatter.format(priceEntity.getBitcoin()));
-                    ether.setText(formatter.format(priceEntity.getEther()));
-                    dollar.setText(formatter.format(priceEntity.getDollar()));
-                    ether2bit.setText(ether2bit.getText()  + formatter.format(profits[0]));
-                    wealthInBit.setText(wealthInBit.getText()+ formatter.format(priceEntity.getBitcoin()*myBitcoin));
-                    wealthInEther.setText(wealthInEther.getText()+ formatter.format(priceEntity.getEther()*myEther));
+                    DecimalFormat formatter = new DecimalFormat("#,###");
+                    bitcoin.setText(formatter.format(priceEntity.getBitcoin()) + " $\n"
+                            + formatter.format(priceEntity.getBitcoin() * priceEntity.getDollar()) + " IRR\n"
+                    +formatter.format(profits[1]) + " $");
+                    ether.setText(formatter.format(priceEntity.getEther()) + " $\n"
+                            + formatter.format(priceEntity.getEther() * priceEntity.getDollar()) + " IRR\n"
+                    +formatter.format(profits[0]) + " $");
+                    dollar.setText(formatter.format(priceEntity.getDollar()) + " IRR");
+                    wealthInBTC.setText(formatter.format(priceEntity.getBitcoin() * myBitcoin) + " $" + "\n"
+                            + formatter.format(priceEntity.getBitcoin() * myBitcoin * priceEntity.getDollar()) + " IRR" + "\n");
+                    wealthInETH.setText(formatter.format(priceEntity.getEther() * myEther) + " $" + "\n"
+                            + formatter.format(+priceEntity.getEther() * myEther * priceEntity.getDollar()) + " IRR" + "\n");
+//                    ether2bit.setText(ether2bit.getText() + formatter.format(profits[0]));
+//                    wealthInBit.setText(wealthInBit.getText() + formatter.format(priceEntity.getBitcoin() * myBitcoin));
+//                    wealthInEther.setText(wealthInEther.getText() + formatter.format(priceEntity.getEther() * myEther));
+
                     //rial.setText(formatter.format(Math.round(priceEntity.getDollar() * priceEntity.getBitcoin())));
                 }
             }
